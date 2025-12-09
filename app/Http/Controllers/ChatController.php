@@ -64,6 +64,8 @@ class ChatController extends Controller
             Log::info('✅ Evento MessageSent emitido exitosamente', [
                 'message_id' => $message->id,
                 'channel' => $channel,
+                'broadcast_on' => $event->broadcastOn(),
+                'broadcast_as' => $event->broadcastAs(),
             ]);
         } catch (\Exception $e) {
             Log::error('❌ Error al emitir evento de broadcasting: ' . $e->getMessage());

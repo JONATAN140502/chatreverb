@@ -603,7 +603,7 @@
                     }
                     
                     currentChannelInstance.listen('.message.sent', (e) => {
-                        console.log('✅ Mensaje recibido en general:', e);
+                        console.log('✅✅✅ Mensaje recibido en general:', e);
                         console.log('📦 Datos completos:', JSON.stringify(e, null, 2));
                         if (e.message) {
                             console.log('👤 User ID del mensaje:', e.message.user_id, 'vs Current User:', currentUserId);
@@ -629,6 +629,11 @@
                             console.warn('⚠️ El mensaje no tiene datos');
                         }
                     });
+                    
+                    // Escuchar TODOS los eventos en el canal para depurar
+                    currentChannelInstance.listen('*', (eventName, data) => {
+                        console.log('📨 Evento recibido en canal general:', eventName, data);
+                    });
                     console.log('✅ Suscrito a canal general');
                 } catch(e) {
                     console.error('❌ Error al suscribirse a canal general:', e);
@@ -653,7 +658,7 @@
                         }
                         
                         currentChannelInstance.listen('.message.sent', (e) => {
-                            console.log('✅ Mensaje recibido en canal privado:', e);
+                            console.log('✅✅✅ Mensaje recibido en canal privado:', e);
                             console.log('📦 Datos completos:', JSON.stringify(e, null, 2));
                             if (e.message) {
                                 console.log('👤 User ID del mensaje:', e.message.user_id, 'vs Current User:', currentUserId);
@@ -678,6 +683,11 @@
                             } else {
                                 console.warn('⚠️ El mensaje no tiene datos');
                             }
+                        });
+                        
+                        // Escuchar TODOS los eventos en el canal para depurar
+                        currentChannelInstance.listen('*', (eventName, data) => {
+                            console.log('📨 Evento recibido en canal privado:', eventName, data);
                         });
                         console.log('✅ Suscrito a canal privado:', channelName);
                     } else {
