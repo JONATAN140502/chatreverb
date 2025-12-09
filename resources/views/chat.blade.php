@@ -397,14 +397,15 @@
             console.log('🔧 Configurando Reverb (local/VPS):', { key: reverbKey, host: reverbHost, port: reverbPort, scheme: reverbScheme });
             
             // Determinar si usar WSS o WS según el esquema
-            // Si la página está en HTTPS, usar WSS en puerto 443 (requiere proxy reverso)
-            // Si la página está en HTTP, usar WS en el puerto configurado
+            // Si Reverb está configurado como HTTPS, usar WSS
+            // Si la página está en HTTPS pero Reverb está en HTTP, usar el puerto configurado directamente
             const pageIsSecure = window.location.protocol === 'https:';
-            const useSecure = reverbScheme === 'https' || pageIsSecure;
+            const reverbIsSecure = reverbScheme === 'https';
             
-            // Si la página está en HTTPS, usar puerto 443 con proxy reverso
-            // Si está en HTTP, usar el puerto configurado (8080)
-            const finalPort = (useSecure && pageIsSecure) ? 443 : reverbPort;
+            // Si Reverb está configurado como HTTPS, usar puerto 443 (requiere proxy reverso)
+            // Si Reverb está en HTTP, usar el puerto configurado directamente (aunque la página esté en HTTPS)
+            const useSecure = reverbIsSecure;
+            const finalPort = reverbIsSecure ? 443 : reverbPort;
             
             echoConfig = {
                 broadcaster: 'pusher',
@@ -430,7 +431,9 @@
                 port: finalPort,
                 scheme: useSecure ? 'wss' : 'ws',
                 pageProtocol: window.location.protocol,
-                useSecure: useSecure
+                reverbScheme: reverbScheme,
+                useSecure: useSecure,
+                '⚠️ NOTA': pageIsSecure && !reverbIsSecure ? 'Página en HTTPS pero Reverb en HTTP - Usando puerto directo (puede fallar por políticas del navegador)' : 'OK'
             });
         }
         
@@ -454,6 +457,17 @@
                 
                 pusher.connection.bind('error', (err) => {
                     console.error('❌ Error WebSocket:', err);
+                    console.error('Detalles del error:', JSON.stringify(err, null, 2));
+                    updateStatus(false);
+                });
+                
+                pusher.connection.bind('unavailable', () => {
+                    console.error('❌ WebSocket no disponible - Verifica que Reverb esté corriendo y el proxy esté configurado');
+                    updateStatus(false);
+                });
+                
+                pusher.connection.bind('failed', () => {
+                    console.error('❌ Conexión WebSocket falló - Verifica la configuración del proxy reverso');
                     updateStatus(false);
                 });
                 
