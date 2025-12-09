@@ -396,14 +396,24 @@
             
             console.log('🔧 Configurando Reverb (local/VPS):', { key: reverbKey, host: reverbHost, port: reverbPort, scheme: reverbScheme });
             
+            // Determinar si usar WSS o WS según el esquema
+            // Si la página está en HTTPS, usar WSS en puerto 443 (requiere proxy reverso)
+            // Si la página está en HTTP, usar WS en el puerto configurado
+            const pageIsSecure = window.location.protocol === 'https:';
+            const useSecure = reverbScheme === 'https' || pageIsSecure;
+            
+            // Si la página está en HTTPS, usar puerto 443 con proxy reverso
+            // Si está en HTTP, usar el puerto configurado (8080)
+            const finalPort = (useSecure && pageIsSecure) ? 443 : reverbPort;
+            
             echoConfig = {
                 broadcaster: 'pusher',
                 key: reverbKey,
                 wsHost: reverbHost,
-                wsPort: reverbPort,
-                wssPort: reverbPort,
-                forceTLS: reverbScheme === 'https',
-                enabledTransports: ['ws', 'wss'],
+                wsPort: finalPort,
+                wssPort: finalPort,
+                forceTLS: useSecure,
+                enabledTransports: useSecure ? ['wss'] : ['ws'],
                 disableStats: true,
                 cluster: '', // Reverb no usa cluster
                 authEndpoint: '/broadcasting/auth',
@@ -412,8 +422,16 @@
                         'X-CSRF-TOKEN': csrfToken
                     }
                 },
-                encrypted: reverbScheme === 'https'
+                encrypted: useSecure
             };
+            
+            console.log('🔧 Configuración final de Echo:', {
+                host: reverbHost,
+                port: finalPort,
+                scheme: useSecure ? 'wss' : 'ws',
+                pageProtocol: window.location.protocol,
+                useSecure: useSecure
+            });
         }
         
         window.Echo = new Echo(echoConfig);

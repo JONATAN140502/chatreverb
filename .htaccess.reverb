@@ -1,0 +1,22 @@
+# Configuración de Proxy Reverso para Reverb en cPanel
+# Copia este contenido a tu archivo .htaccess en la raíz de tu dominio
+
+# Habilitar mod_rewrite
+RewriteEngine On
+
+# Proxy para WebSocket de Reverb (puerto 443 -> 8080 interno)
+# Esto redirige las conexiones WebSocket a Reverb corriendo en localhost:8080
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/app/(.*)$ ws://127.0.0.1:8080/app/$1 [P,L]
+
+# Proxy HTTP para broadcasting/auth
+# Esto redirige las peticiones de autenticación a Laravel
+RewriteRule ^/broadcasting/(.*)$ http://127.0.0.1:8000/broadcasting/$1 [P,L]
+
+# Nota: Asegúrate de que estos módulos estén habilitados en Apache:
+# - mod_rewrite
+# - mod_proxy
+# - mod_proxy_http
+# - mod_proxy_wstunnel (si está disponible)
+

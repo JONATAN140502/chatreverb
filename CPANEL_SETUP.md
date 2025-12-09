@@ -5,8 +5,13 @@
 Reverb **NO funciona directamente** en hosting compartido de cPanel porque:
 
 1. **No puedes ejecutar procesos en segundo plano** - Reverb necesita `php artisan reverb:start` corriendo constantemente
-2. **Puertos bloqueados** - El puerto 8080 generalmente está bloqueado
+2. **Puertos bloqueados** - El puerto 8080 generalmente está bloqueado o requiere configuración especial
 3. **Sin acceso SSH** - La mayoría de planes compartidos no permiten SSH
+4. **Problemas con WebSockets** - Los WebSockets en puertos no estándar (8080) pueden estar bloqueados por el firewall
+
+## 🔧 Solución: Proxy Reverso con Nginx (Para VPS/Dedicado)
+
+Si tienes un VPS y quieres usar Reverb con HTTPS, necesitas configurar un proxy reverso:
 
 ## ✅ Soluciones para cPanel
 
