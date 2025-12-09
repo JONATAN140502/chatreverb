@@ -396,25 +396,14 @@
             
             console.log('🔧 Configurando Reverb (local/VPS):', { key: reverbKey, host: reverbHost, port: reverbPort, scheme: reverbScheme });
             
-            // Determinar si usar WSS o WS según el esquema
-            // Si Reverb está configurado como HTTPS, usar WSS
-            // Si la página está en HTTPS pero Reverb está en HTTP, usar el puerto configurado directamente
-            const pageIsSecure = window.location.protocol === 'https:';
-            const reverbIsSecure = reverbScheme === 'https';
-            
-            // Si Reverb está configurado como HTTPS, usar puerto 443 (requiere proxy reverso)
-            // Si Reverb está en HTTP, usar el puerto configurado directamente (aunque la página esté en HTTPS)
-            const useSecure = reverbIsSecure;
-            const finalPort = reverbIsSecure ? 443 : reverbPort;
-            
             echoConfig = {
                 broadcaster: 'pusher',
                 key: reverbKey,
                 wsHost: reverbHost,
-                wsPort: finalPort,
-                wssPort: finalPort,
-                forceTLS: useSecure,
-                enabledTransports: useSecure ? ['wss'] : ['ws'],
+                wsPort: reverbPort,
+                wssPort: reverbPort,
+                forceTLS: reverbScheme === 'https',
+                enabledTransports: ['ws', 'wss'],
                 disableStats: true,
                 cluster: '', // Reverb no usa cluster
                 authEndpoint: '/broadcasting/auth',
@@ -423,18 +412,8 @@
                         'X-CSRF-TOKEN': csrfToken
                     }
                 },
-                encrypted: useSecure
+                encrypted: reverbScheme === 'https'
             };
-            
-            console.log('🔧 Configuración final de Echo:', {
-                host: reverbHost,
-                port: finalPort,
-                scheme: useSecure ? 'wss' : 'ws',
-                pageProtocol: window.location.protocol,
-                reverbScheme: reverbScheme,
-                useSecure: useSecure,
-                '⚠️ NOTA': pageIsSecure && !reverbIsSecure ? 'Página en HTTPS pero Reverb en HTTP - Usando puerto directo (puede fallar por políticas del navegador)' : 'OK'
-            });
         }
         
         window.Echo = new Echo(echoConfig);
@@ -457,17 +436,6 @@
                 
                 pusher.connection.bind('error', (err) => {
                     console.error('❌ Error WebSocket:', err);
-                    console.error('Detalles del error:', JSON.stringify(err, null, 2));
-                    updateStatus(false);
-                });
-                
-                pusher.connection.bind('unavailable', () => {
-                    console.error('❌ WebSocket no disponible - Verifica que Reverb esté corriendo y el proxy esté configurado');
-                    updateStatus(false);
-                });
-                
-                pusher.connection.bind('failed', () => {
-                    console.error('❌ Conexión WebSocket falló - Verifica la configuración del proxy reverso');
                     updateStatus(false);
                 });
                 
